@@ -2,6 +2,14 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 
+app.use((req, res, next) => {
+    const err = new Error('Not Found');
+    err.statusCode = 404;
+    next(err);
+});
+  
+const serverErrorLogger = debug('backend:error');
+
 const csurf = require('csurf');
 const csurf = require('csurf');
 const { isProduction } = require('./config/keys');
@@ -20,8 +28,17 @@ if (!isProduction) {
     app.use(cors());
 }
 
+app.use((err, req, res, next) => {
+    serverErrorLogger(err);
+    const statusCode = err.statusCode || 500;
+    res.status(statusCode);
+    res.json({
+      message: err.message,
+      statusCode,
+      errors: err.errors
+    })
+});
 
-// ...
 app.use(
   csurf({
     cookie: {
